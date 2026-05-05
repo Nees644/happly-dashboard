@@ -278,7 +278,19 @@ async function doLogin() {
     if (r.status === 401) { document.getElementById('login-error').style.display='block'; return; }
     ADMIN_KEY = key;
     const d = await r.json();
-    allProducts = d.products || [];
+
+    // Haal producten op — direct uit de products tabel via aparte call
+    const rp = await fetch(API+'/api/dashboard/products', {headers:{'x-admin-key':key}});
+    if (rp.ok) {
+      const dp = await rp.json();
+      allProducts = dp.products || [];
+    } else {
+      // Fallback: gebruik producten uit stats response, of hardcode Zetjes
+      allProducts = d.products && d.products.length > 0
+        ? d.products
+        : [{ slug:'zetjes', name:'Zetjes' }];
+    }
+
     document.getElementById('login-screen').style.display='none';
     document.getElementById('dashboard').style.display='block';
     renderProductCheckboxes();
@@ -307,6 +319,7 @@ function showView(view) {
   document.getElementById('nav-'+view)?.classList.add('active');
   if (view==='overview') loadOverview();
   if (view==='tenants') loadTenants();
+  if (view==='new-tenant') renderProductCheckboxes();
 }
 
 async function api(path) {
