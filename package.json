@@ -1,0 +1,10 @@
+{
+  "name": "happly-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "pdfkit": "^0.14.0"
+  },
+  "engines": { "node": ">=18" }
+}
