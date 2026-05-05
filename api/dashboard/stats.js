@@ -78,16 +78,23 @@ export default async function handler(req, res) {
 
   const { tenant: tenantSlug, product: productSlug } = req.query;
 
+  // Verbindingscheck — geeft duidelijke fout als credentials ontbreken
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+    return res.status(500).json({ error: 'Supabase credentials ontbreken in environment variables' });
+  }
+
   // ── Overzicht alle tenants ──
   if (!tenantSlug) {
-    const { data: tenants } = await supabase
+    const { data: tenants, error: tErr } = await supabase
       .from('tenants').select('id, name, slug, active, created_at')
       .order('created_at', { ascending: false });
+
+    if (tErr) return res.status(500).json({ error: 'Database fout: ' + tErr.message });
 
     const { data: products } = await supabase
       .from('products').select('id, slug, name').eq('active', true);
 
-    const results = await Promise.all(tenants.map(async t => {
+    const results = await Promise.all((tenants || []).map(async t => {
       // Welke producten heeft deze tenant
       const { data: tp } = await supabase
         .from('tenant_products')
