@@ -231,7 +231,7 @@
     <!-- ④ NIEUWE KLANT -->
     <div id="view-new-tenant" style="display:none">
       <div class="topbar"><div class="page-title">Nieuwe <span>Klant</span></div></div>
-      <div class="card" style="max-width:580px">
+      <div class="card" style="max-width:640px">
         <div class="card-title">Klant aanmaken + uitnodigingslinks genereren</div>
         <div class="form-grid">
           <div class="form-field">
@@ -243,17 +243,17 @@
             <input class="form-input" id="new-slug" placeholder="acme-bv">
           </div>
           <div class="form-field">
-            <label class="form-label">Aantal links per product</label>
+            <label class="form-label">Aantal links per combinatie</label>
             <input class="form-input" id="new-count" type="number" value="10" min="1" max="500">
           </div>
         </div>
-        <div class="form-label" style="margin-bottom:8px">Producten activeren</div>
-        <div class="product-checkboxes" id="product-checkboxes">
-          <!-- Gevuld vanuit API -->
-          <label class="product-cb checked">
-            <input type="checkbox" value="zetjes" checked> Zetjes
-          </label>
+
+        <div class="form-label" style="margin-bottom:12px">Producten & thema's</div>
+        <div id="product-theme-rows" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+          <!-- Gevuld door renderProductThemeRows() -->
         </div>
+        <button onclick="addProductThemeRow()" style="background:none;border:1.5px dashed var(--border);border-radius:8px;padding:8px 16px;font-size:13px;color:var(--text-mid);cursor:pointer;margin-bottom:20px;width:100%">+ Nog een product/thema toevoegen</button>
+
         <button class="btn-create" onclick="createTenant()">Aanmaken & links genereren →</button>
         <div class="links-section" id="links-section"></div>
       </div>
@@ -293,7 +293,7 @@ async function doLogin() {
 
     document.getElementById('login-screen').style.display='none';
     document.getElementById('dashboard').style.display='block';
-    renderProductCheckboxes();
+    renderProductThemeRows();
     loadOverview();
   } catch(e) {
     document.getElementById('login-error').textContent='Verbinding mislukt';
@@ -319,7 +319,7 @@ function showView(view) {
   document.getElementById('nav-'+view)?.classList.add('active');
   if (view==='overview') loadOverview();
   if (view==='tenants') loadTenants();
-  if (view==='new-tenant') renderProductCheckboxes();
+  if (view==='new-tenant') renderProductThemeRows();
 }
 
 async function api(path) {
@@ -534,19 +534,37 @@ async function loadTenantDetail(slug, productSlug) {
 }
 
 // ── Nieuwe klant ──
-function renderProductCheckboxes() {
-  const el = document.getElementById('product-checkboxes');
-  el.innerHTML = allProducts.map(p=>`
-    <label class="product-cb ${p.slug==='zetjes'?'checked':''}">
-      <input type="checkbox" value="${p.slug}" ${p.slug==='zetjes'?'checked':''}>
-      ${p.name}
-    </label>`).join('');
-  el.querySelectorAll('label').forEach(lbl=>{
-    lbl.addEventListener('click',()=>{
-      const cb = lbl.querySelector('input');
-      setTimeout(()=>lbl.classList.toggle('checked',cb.checked),0);
-    });
-  });
+const THEMES = [
+  { slug: 'werk',       label: 'Werk' },
+  { slug: 'ondernemen', label: 'Ondernemen' },
+];
+
+function renderProductThemeRows() {
+  const el = document.getElementById('product-theme-rows');
+  el.innerHTML = '';
+  addProductThemeRow();
+}
+
+function addProductThemeRow() {
+  const el = document.getElementById('product-theme-rows');
+  const idx = el.children.length;
+  const productOptions = allProducts.map(p =>
+    `<option value="${p.slug}">${p.name}</option>`).join('');
+  const themeOptions = THEMES.map(t =>
+    `<option value="${t.slug}">${t.label}</option>`).join('');
+
+  const row = document.createElement('div');
+  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;';
+  row.innerHTML = `
+    <select class="form-input pt-product" style="margin:0">
+      ${productOptions}
+    </select>
+    <select class="form-input pt-theme" style="margin:0">
+      ${themeOptions}
+    </select>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;font-size:18px;color:var(--text-soft);cursor:pointer;padding:0 4px;line-height:1">×</button>
+  `;
+  el.appendChild(row);
 }
 
 function autoSlug() {
@@ -559,30 +577,48 @@ async function createTenant() {
   const name  = document.getElementById('new-name').value.trim();
   const slug  = document.getElementById('new-slug').value.trim();
   const count = parseInt(document.getElementById('new-count').value)||10;
-  const products = [...document.querySelectorAll('#product-checkboxes input:checked')].map(i=>i.value);
-  if (!name||!slug) { alert('Naam en slug zijn verplicht'); return; }
-  if (!products.length) { alert('Kies minimaal één product'); return; }
 
-  const r = await fetch(API+'/api/dashboard/tenants',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-admin-key':ADMIN_KEY},
-    body:JSON.stringify({name,slug,products,inviteCount:count})
-  });
-  const d = await r.json();
-  if (d.error) { alert('Fout: '+d.error); return; }
+  // Haal product+thema combinaties op uit de rijen
+  const rows = document.querySelectorAll('#product-theme-rows > div');
+  const products = [...rows].map(row => ({
+    slug:  row.querySelector('.pt-product').value,
+    theme: row.querySelector('.pt-theme').value,
+  }));
 
-  // Toon links per product
-  const sec = document.getElementById('links-section');
-  sec.style.display='block';
-  sec.innerHTML = Object.entries(d.links).map(([pSlug,links])=>`
-    <div class="links-product-title">${pSlug.charAt(0).toUpperCase()+pSlug.slice(1)} — ${links.length} links</div>
-    <div class="links-box" id="box-${pSlug}">${links.join('\n')}</div>
-    <button class="copy-btn" onclick="copyLinks('${pSlug}')">📋 Kopieer ${pSlug} links</button>
-  `).join('');
+  if (!name || !slug) { alert('Naam en slug zijn verplicht'); return; }
+  if (!products.length) { alert('Voeg minimaal één product/thema toe'); return; }
+
+  const btn = document.querySelector('.btn-create');
+  btn.disabled = true; btn.textContent = 'Aanmaken...';
+
+  try {
+    const r = await fetch(API+'/api/dashboard/tenants', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','x-admin-key':ADMIN_KEY},
+      body: JSON.stringify({name, slug, products, inviteCount: count})
+    });
+    const d = await r.json();
+    if (d.error) { alert('Fout: '+d.error); return; }
+
+    // Toon links per product+thema combinatie
+    const sec = document.getElementById('links-section');
+    sec.style.display = 'block';
+    sec.innerHTML = Object.entries(d.links).map(([key, info]) => `
+      <div class="links-product-title">
+        ${info.label} — ${info.links.length} links
+      </div>
+      <div class="links-box" id="box-${key}">${info.links.join('\n')}</div>
+      <button class="copy-btn" onclick="copyLinks('${key}')">📋 Kopieer links</button>
+    `).join('');
+  } catch(e) {
+    alert('Er ging iets mis: '+e.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Aanmaken & links genereren →';
+  }
 }
 
-function copyLinks(pSlug) {
-  navigator.clipboard.writeText(document.getElementById('box-'+pSlug).textContent);
+function copyLinks(key) {
+  navigator.clipboard.writeText(document.getElementById('box-'+key).textContent);
 }
 
 async function downloadPDF() {
