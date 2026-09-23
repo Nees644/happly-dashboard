@@ -3,5 +3,8 @@
   "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
-  ]
+  ],
+  "functions": {
+    "api/dashboard/group-report.js": { "includeFiles": "assets/**" }
+  }
 }

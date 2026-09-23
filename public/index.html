@@ -768,7 +768,7 @@ function renderGroupCard(gr) {
       ${body}
       <div class="group-actions">
         <button class="btn-detail" onclick="copyText(${esc(JSON.stringify(gr.link))}, this)">Link kopiëren</button>
-        <button class="btn-detail" onclick="downloadGroupPDF('${gr.id}', this)" ${c ? '' : 'disabled title="Pas vanaf 5 actieve gebruikers"'}>Rapport (PDF)</button>
+        <button class="btn-detail" onclick="downloadGroupPDF('${gr.id}', this)">Rapport (PDF)</button>
         <button class="btn-detail" onclick="toggleGroup('${gr.id}', ${!gr.active})">${gr.active ? 'Deactiveren' : 'Activeren'}</button>
       </div>
     </div>`;
@@ -866,7 +866,16 @@ function copyText(text, btn) {
 }
 
 async function downloadGroupPDF(id, btn) {
-  alert('Het groepsrapport komt in de volgende stap.');
+  const old = btn.textContent; btn.disabled = true; btn.textContent = 'Maken...';
+  try {
+    const r = await fetch(`${API}/api/dashboard/group-report?id=${encodeURIComponent(id)}`, {headers:{'x-admin-key':ADMIN_KEY}});
+    if (!r.ok) throw new Error('Fout '+r.status);
+    const name = (r.headers.get('Content-Disposition')||'').match(/filename="([^"]+)"/)?.[1] || 'zetjes-groepsrapport.pdf';
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  } catch(e) { alert('Rapport maken mislukt: '+e.message); }
+  finally { btn.disabled = false; btn.textContent = old; }
 }
 
 async function downloadPDF() {

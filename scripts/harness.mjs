@@ -4,7 +4,7 @@ export async function call(name, method, { body, query } = {}) {
   const { default: h } = await import(`../api/dashboard/${name}.js`);
   return new Promise((resolve) => {
     const res = { statusCode:200, setHeader(){}, status(c){this.statusCode=c;return this;},
-      json(o){resolve({status:this.statusCode,...o});return this;}, end(){resolve({status:this.statusCode});return this;} };
+      json(o){resolve({status:this.statusCode,...o});return this;}, send(b){resolve({status:this.statusCode,body:b});return this;}, end(){resolve({status:this.statusCode});return this;} };
     h({ method, body, query: query||{}, headers:{'x-admin-key':'lokaal-test'} }, res);
   });
 }
