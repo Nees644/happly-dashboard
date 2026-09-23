@@ -155,6 +155,29 @@
   .back-link{background:none;border:none;color:var(--pink);font-size:14px;font-weight:600;
     cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;margin-bottom:16px}
   .back-link:hover{text-decoration:underline}
+
+  /* Groepen */
+  .form-hint{font-size:12.5px;color:var(--text-soft);margin:0 0 14px}
+  .form-check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-mid);padding:10px 0}
+  .group-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+  .group-card{display:flex;flex-direction:column;gap:10px}
+  .group-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .group-title{font-weight:600;font-size:16px}
+  .group-meta{font-size:12.5px;color:var(--text-soft);line-height:1.5}
+  .group-few{background:#F7F2F5;border-radius:10px;padding:18px;text-align:center;color:var(--text-soft);font-size:13.5px;font-style:italic}
+  .group-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .group-kpis div{background:#FDF8FB;border:1px solid var(--border);border-radius:10px;padding:10px}
+  .group-kpis strong{display:block;font-size:22px;line-height:1.1}
+  .group-kpis span{font-size:11.5px;color:var(--text-soft)}
+  .stack-bar{display:flex;height:10px;border-radius:100px;overflow:hidden;background:#F3E8EF}
+  .stack-legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:var(--text-mid)}
+  .stack-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+  .group-row{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--text-soft)}
+  .group-row strong{color:var(--text-mid);font-weight:500;text-align:right}
+  .group-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+  .btn-detail:disabled{opacity:.45;cursor:default}
+  .group-result{display:flex;gap:18px;align-items:flex-start;margin-top:18px;padding-top:18px;border-top:1px solid var(--border);flex-wrap:wrap}
+  [hidden]{display:none !important}
 </style>
 </head>
 <body>
@@ -226,16 +249,17 @@
         <button class="pdf-btn" id="pdf-btn" onclick="downloadPDF()">⬇ Download rapport PDF</button>
       </div>
       <div id="detail-content"><div class="loading">Laden...</div></div>
+      <div id="tenant-extra"></div>
     </div>
 
     <!-- ④ NIEUWE KLANT -->
     <div id="view-new-tenant" style="display:none">
       <div class="topbar"><div class="page-title">Nieuwe <span>Klant</span></div></div>
       <div class="card" style="max-width:640px">
-        <div class="card-title">Klant aanmaken + uitnodigingslinks genereren</div>
+        <div class="card-title">Klant aanmaken</div>
         <div class="form-grid">
           <div class="form-field">
-            <label class="form-label">Bedrijfsnaam</label>
+            <label class="form-label">Naam</label>
             <input class="form-input" id="new-name" placeholder="Acme BV" oninput="autoSlug()">
           </div>
           <div class="form-field">
@@ -243,19 +267,42 @@
             <input class="form-input" id="new-slug" placeholder="acme-bv">
           </div>
           <div class="form-field">
-            <label class="form-label">Aantal links per combinatie</label>
-            <input class="form-input" id="new-count" type="number" value="10" min="1" max="500">
+            <label class="form-label">Type</label>
+            <select class="form-input" id="new-type" onchange="toggleGli('new')">
+              <option value="werkgever">Werkgever</option>
+              <option value="gli_aanbieder">GLI-aanbieder</option>
+              <option value="salesorganisatie">Salesorganisatie</option>
+              <option value="personal">Personal (B2C)</option>
+              <option value="overig">Overig</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label class="form-label">Contact-e-mail (voor rapportages)</label>
+            <input class="form-input" id="new-email" type="email" placeholder="coordinator@aanbieder.nl">
+          </div>
+          <div class="form-field">
+            <label class="form-label">Rapportage</label>
+            <select class="form-input" id="new-rapportage">
+              <option value="maandelijks">Maandelijks</option>
+              <option value="kwartaal">Per kwartaal</option>
+              <option value="geen">Geen</option>
+            </select>
+          </div>
+          <div class="form-field gli-only-new" hidden>
+            <label class="form-label">AGB-code aanbieder (8 cijfers)</label>
+            <input class="form-input" id="new-agb" inputmode="numeric" maxlength="8" placeholder="12345678">
+          </div>
+          <div class="form-field gli-only-new" hidden>
+            <label class="form-label">GLI-programma</label>
+            <select class="form-input" id="new-programma">
+              <option value="">Kies…</option>
+              <option>CooL</option><option>BeweegKuur</option><option>SLIMMER</option>
+              <option>SSiB</option><option>X-Fittt</option><option>KeerDiabetes2Om</option>
+            </select>
           </div>
         </div>
-
-        <div class="form-label" style="margin-bottom:12px">Producten & thema's</div>
-        <div id="product-theme-rows" style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-          <!-- Gevuld door renderProductThemeRows() -->
-        </div>
-        <button onclick="addProductThemeRow()" style="background:none;border:1.5px dashed var(--border);border-radius:8px;padding:8px 16px;font-size:13px;color:var(--text-mid);cursor:pointer;margin-bottom:20px;width:100%">+ Nog een product/thema toevoegen</button>
-
-        <button class="btn-create" onclick="createTenant()">Aanmaken & links genereren →</button>
-        <div class="links-section" id="links-section"></div>
+        <p class="form-hint">Na het aanmaken kom je bij de klant uit. Daar maak je groepen aan, met per groep één link en QR-code.</p>
+        <button class="btn-create" onclick="createTenant()">Klant aanmaken →</button>
       </div>
     </div>
 
@@ -263,7 +310,7 @@
 </div>
 
 <script>
-const API = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
+const API = '';
 let ADMIN_KEY = '';
 let charts = {};
 let currentTenantSlug = '';
@@ -293,7 +340,6 @@ async function doLogin() {
 
     document.getElementById('login-screen').style.display='none';
     document.getElementById('dashboard').style.display='block';
-    renderProductThemeRows();
     loadOverview();
   } catch(e) {
     document.getElementById('login-error').textContent='Verbinding mislukt';
@@ -319,7 +365,6 @@ function showView(view) {
   document.getElementById('nav-'+view)?.classList.add('active');
   if (view==='overview') loadOverview();
   if (view==='tenants') loadTenants();
-  if (view==='new-tenant') renderProductThemeRows();
 }
 
 async function api(path) {
@@ -421,6 +466,7 @@ async function loadTenants() {
 async function loadTenantDetail(slug, productSlug) {
   currentTenantSlug = slug;
   showView('tenant-detail');
+  if (!productSlug) loadTenantPanel(slug);
   document.getElementById('detail-title').innerHTML='Klant <span>Detail</span>';
   document.getElementById('detail-content').innerHTML='<div class="loading">Laden...</div>';
 
@@ -533,40 +579,36 @@ async function loadTenantDetail(slug, productSlug) {
   },50);
 }
 
-// ── Nieuwe klant ──
-const THEMES = [
-  { slug: 'werk',       label: 'Werk' },
-  { slug: 'ondernemen', label: 'Ondernemen' },
+// ── Hulpjes ──
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function apiSend(method, path, body) {
+  const r = await fetch(API+path, {
+    method, headers:{'Content-Type':'application/json','x-admin-key':ADMIN_KEY}, body: JSON.stringify(body)
+  });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.error || ('Fout '+r.status));
+  return d;
+}
+function toggleGli(prefix) {
+  const isGli = document.getElementById(prefix+'-type').value === 'gli_aanbieder';
+  document.querySelectorAll('.gli-only-'+prefix).forEach(el => el.hidden = !isGli);
+}
+function fmtDate(s) { return s ? new Date(s).toLocaleDateString('nl-NL', {day:'numeric', month:'short', year:'numeric'}) : '—'; }
+function addMonthsISO(dateStr, m) {
+  const d = new Date(dateStr+'T12:00:00Z'); d.setUTCMonth(d.getUTCMonth()+m); return d.toISOString().slice(0,10);
+}
+const TYPE_LABELS = { werkgever:'Werkgever', gli_aanbieder:'GLI-aanbieder', salesorganisatie:'Salesorganisatie', personal:'Personal', overig:'Overig' };
+const CONTEXT_LABELS = { werk:'Werk', ondernemen:'Ondernemen', sales:'Sales', managers:'Managers', gli:'Leefstijlprogramma (GLI)' };
+const BLOKKADES = [
+  ['energie','Geen energie','#F59E0B'], ['vertrouwen','Geen vertrouwen','#CC0066'],
+  ['weerstand','Weerstand','#2D1B36'], ['overtuigingen','Overtuigingen','#1E7B55'],
 ];
+const MOMENTEN = { schaamte:'Schaamte', dip:'Dip', groep:'Groep', stilte:'Stille weken' };
+const PW_REDENEN = { voeding:'voeding', medisch:'medisch', mentaal:'mentaal', offtopic:'buiten het onderwerp' };
 
-function renderProductThemeRows() {
-  const el = document.getElementById('product-theme-rows');
-  el.innerHTML = '';
-  addProductThemeRow();
-}
-
-function addProductThemeRow() {
-  const el = document.getElementById('product-theme-rows');
-  const idx = el.children.length;
-  const productOptions = allProducts.map(p =>
-    `<option value="${p.slug}">${p.name}</option>`).join('');
-  const themeOptions = THEMES.map(t =>
-    `<option value="${t.slug}">${t.label}</option>`).join('');
-
-  const row = document.createElement('div');
-  row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:center;';
-  row.innerHTML = `
-    <select class="form-input pt-product" style="margin:0">
-      ${productOptions}
-    </select>
-    <select class="form-input pt-theme" style="margin:0">
-      ${themeOptions}
-    </select>
-    <button onclick="this.parentElement.remove()" style="background:none;border:none;font-size:18px;color:var(--text-soft);cursor:pointer;padding:0 4px;line-height:1">×</button>
-  `;
-  el.appendChild(row);
-}
-
+// ── Nieuwe klant ──
 function autoSlug() {
   const name = document.getElementById('new-name').value;
   document.getElementById('new-slug').value = name.toLowerCase()
@@ -574,51 +616,266 @@ function autoSlug() {
 }
 
 async function createTenant() {
-  const name  = document.getElementById('new-name').value.trim();
-  const slug  = document.getElementById('new-slug').value.trim();
-  const count = parseInt(document.getElementById('new-count').value)||10;
-
-  // Haal product+thema combinaties op uit de rijen
-  const rows = document.querySelectorAll('#product-theme-rows > div');
-  const products = [...rows].map(row => ({
-    slug:  row.querySelector('.pt-product').value,
-    theme: row.querySelector('.pt-theme').value,
-  }));
-
-  if (!name || !slug) { alert('Naam en slug zijn verplicht'); return; }
-  if (!products.length) { alert('Voeg minimaal één product/thema toe'); return; }
-
-  const btn = document.querySelector('.btn-create');
+  const body = {
+    name: document.getElementById('new-name').value.trim(),
+    slug: document.getElementById('new-slug').value.trim(),
+    type: document.getElementById('new-type').value,
+    contact_email: document.getElementById('new-email').value.trim(),
+    rapportage_frequentie: document.getElementById('new-rapportage').value,
+    agb_code_aanbieder: document.getElementById('new-agb').value.trim(),
+    gli_programma: document.getElementById('new-programma').value,
+  };
+  if (!body.name || !body.slug) { alert('Naam en slug zijn verplicht'); return; }
+  const btn = document.querySelector('#view-new-tenant .btn-create');
   btn.disabled = true; btn.textContent = 'Aanmaken...';
-
   try {
-    const r = await fetch(API+'/api/dashboard/tenants', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','x-admin-key':ADMIN_KEY},
-      body: JSON.stringify({name, slug, products, inviteCount: count})
-    });
-    const d = await r.json();
-    if (d.error) { alert('Fout: '+d.error); return; }
-
-    // Toon links per product+thema combinatie
-    const sec = document.getElementById('links-section');
-    sec.style.display = 'block';
-    sec.innerHTML = Object.entries(d.links).map(([key, info]) => `
-      <div class="links-product-title">
-        ${info.label} — ${info.links.length} links
-      </div>
-      <div class="links-box" id="box-${key}">${info.links.join('\n')}</div>
-      <button class="copy-btn" onclick="copyLinks('${key}')">📋 Kopieer links</button>
-    `).join('');
+    await apiSend('POST', '/api/dashboard/tenants', body);
+    ['new-name','new-slug','new-email','new-agb'].forEach(id => document.getElementById(id).value='');
+    loadTenantDetail(body.slug);
   } catch(e) {
-    alert('Er ging iets mis: '+e.message);
+    alert('Fout: '+e.message);
   } finally {
-    btn.disabled = false; btn.textContent = 'Aanmaken & links genereren →';
+    btn.disabled = false; btn.textContent = 'Klant aanmaken →';
   }
 }
 
-function copyLinks(key) {
-  navigator.clipboard.writeText(document.getElementById('box-'+key).textContent);
+// ── Klantgegevens en groepen (onder het klantdetail) ──
+let currentTenant = null;
+
+async function loadTenantPanel(slug) {
+  const el = document.getElementById('tenant-extra');
+  el.innerHTML = '<div class="loading">Groepen laden...</div>';
+  try {
+    const [t, g] = await Promise.all([
+      api('/api/dashboard/tenants?slug='+encodeURIComponent(slug)),
+      api('/api/dashboard/groups?tenant='+encodeURIComponent(slug)),
+    ]);
+    currentTenant = t.tenant;
+    el.innerHTML = renderGroups(g) + renderTenantForm(t.tenant);
+    toggleGli('edit');
+  } catch(e) {
+    el.innerHTML = '<div class="empty">Groepen laden mislukt: '+esc(e.message)+'</div>';
+  }
+}
+
+function renderTenantForm(t) {
+  const opt = (v, cur, label) => `<option value="${v}" ${v===cur?'selected':''}>${label}</option>`;
+  return `
+    <div class="card" style="margin-top:24px;max-width:720px">
+      <div class="card-title">Klantgegevens</div>
+      <div class="form-grid">
+        <div class="form-field"><label class="form-label">Naam</label>
+          <input class="form-input" id="edit-name" value="${esc(t.name)}"></div>
+        <div class="form-field"><label class="form-label">Type</label>
+          <select class="form-input" id="edit-type" onchange="toggleGli('edit')">
+            ${Object.entries(TYPE_LABELS).map(([v,l])=>opt(v, t.type, l)).join('')}
+          </select></div>
+        <div class="form-field"><label class="form-label">Contact-e-mail</label>
+          <input class="form-input" id="edit-email" type="email" value="${esc(t.contact_email||'')}"></div>
+        <div class="form-field"><label class="form-label">Rapportage</label>
+          <select class="form-input" id="edit-rapportage">
+            ${opt('maandelijks', t.rapportage_frequentie, 'Maandelijks')}${opt('kwartaal', t.rapportage_frequentie, 'Per kwartaal')}${opt('geen', t.rapportage_frequentie, 'Geen')}
+          </select></div>
+        <div class="form-field gli-only-edit" hidden><label class="form-label">AGB-code aanbieder (8 cijfers)</label>
+          <input class="form-input" id="edit-agb" inputmode="numeric" maxlength="8" value="${esc(t.agb_code_aanbieder||'')}"></div>
+        <div class="form-field gli-only-edit" hidden><label class="form-label">GLI-programma</label>
+          <select class="form-input" id="edit-programma">
+            ${opt('', t.gli_programma||'', 'Kies…')}
+            ${['CooL','BeweegKuur','SLIMMER','SSiB','X-Fittt','KeerDiabetes2Om'].map(p=>opt(p, t.gli_programma, p)).join('')}
+          </select></div>
+      </div>
+      <button class="btn-create" onclick="saveTenant()">Opslaan</button>
+      <span id="edit-saved" class="form-hint" style="margin-left:12px"></span>
+    </div>`;
+}
+
+async function saveTenant() {
+  const fields = {
+    name: document.getElementById('edit-name').value.trim(),
+    type: document.getElementById('edit-type').value,
+    contact_email: document.getElementById('edit-email').value.trim(),
+    rapportage_frequentie: document.getElementById('edit-rapportage').value,
+    agb_code_aanbieder: document.getElementById('edit-agb').value.trim(),
+    gli_programma: document.getElementById('edit-programma').value,
+  };
+  try {
+    const d = await apiSend('PATCH', '/api/dashboard/tenants', { slug: currentTenant.slug, fields });
+    currentTenant = d.tenant;
+    document.getElementById('edit-saved').textContent = 'Opgeslagen ✓';
+  } catch(e) { alert('Fout: '+e.message); }
+}
+
+function defaultContext(type) {
+  return type === 'gli_aanbieder' ? 'gli' : type === 'personal' ? 'ondernemen' : type === 'salesorganisatie' ? 'sales' : 'werk';
+}
+
+function renderGroups(g) {
+  const groups = g.groups || [];
+  const cards = groups.length ? groups.map(renderGroupCard).join('') : '<div class="empty">Nog geen groepen.</div>';
+  const losse = g.losse_links ? `<p class="form-hint" style="margin-top:10px">Daarnaast ${g.losse_links} oude persoonlijke links zonder groep. Die blijven werken en tellen mee in de cijfers hierboven.</p>` : '';
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:28px 0 14px">
+      <div class="page-title" style="font-size:20px">Groepen</div>
+      <button class="btn-create" onclick="showGroupForm()">+ Nieuwe groep</button>
+    </div>
+    <div id="group-form-wrap"></div>
+    <div class="group-grid">${cards}</div>
+    ${losse}`;
+}
+
+function renderGroupCard(gr) {
+  const c = gr.cijfers;
+  const status = !gr.active ? '<span class="badge-inactive">Inactief</span>'
+    : gr.verlopen ? '<span class="badge-inactive">Verlopen</span>' : '<span class="badge-active">Actief</span>';
+  const meta = [
+    CONTEXT_LABELS[gr.context] || gr.context,
+    gr.start_date ? 'start '+fmtDate(gr.start_date) : null,
+    gr.phase_label ? `fase: ${gr.phase_label} (week ${gr.week})` : null,
+    gr.expires_at ? 'geldig tot '+fmtDate(gr.expires_at) : 'onbeperkt geldig',
+    gr.max_uses ? `max. ${gr.max_uses} gebruikers` : null,
+  ].filter(Boolean).join(' · ');
+
+  let body;
+  if (!c) {
+    body = '<div class="group-few">Nog te weinig gebruikers voor cijfers</div>';
+  } else {
+    const totB = BLOKKADES.reduce((s,[k])=>s+(c.blokkades[k]||0),0) || 1;
+    const bar = BLOKKADES.map(([k,l,col]) => {
+      const n = c.blokkades[k]||0; if (!n) return '';
+      return `<div title="${l}: ${n}" style="width:${n/totB*100}%;background:${col}"></div>`;
+    }).join('');
+    const legend = BLOKKADES.map(([k,l,col]) => `<span><i style="background:${col}"></i>${l} ${c.blokkades[k]||0}</span>`).join('');
+    const momenten = gr.context === 'gli'
+      ? `<div class="group-row"><span>Risicomomenten</span><strong>${Object.entries(MOMENTEN).map(([k,l])=>`${l} ${c.momenten[k]||0}`).join(' · ')}</strong></div>` : '';
+    const pw = Object.entries(c.poortwachter_redenen||{}).map(([k,n])=>`${n}× ${PW_REDENEN[k]||k}`).join(', ');
+    body = `
+      <div class="group-kpis">
+        <div><strong>${c.actieve_gebruikers}</strong><span>actief${gr.verwacht ? ' van '+gr.verwacht : ''}</span></div>
+        <div><strong>${c.sessies_deze_maand}</strong><span>sessies deze maand</span></div>
+        <div><strong>${c.sessies}</strong><span>sessies totaal</span></div>
+      </div>
+      <div class="stack-bar">${bar}</div>
+      <div class="stack-legend">${legend}</div>
+      ${momenten}
+      <div class="group-row"><span>Poortwachter</span><strong>${c.poortwachter ? c.poortwachter+'× doorverwezen'+(pw?' ('+pw+')':'') : 'niet nodig geweest'}</strong></div>
+      <div class="group-row"><span>Laatste activiteit</span><strong>${fmtDate(c.laatste_activiteit)}</strong></div>`;
+  }
+
+  return `
+    <div class="card group-card">
+      <div class="group-head"><div class="group-title">${esc(gr.label)}</div>${status}</div>
+      <div class="group-meta">${esc(meta)}</div>
+      ${body}
+      <div class="group-actions">
+        <button class="btn-detail" onclick="copyText(${esc(JSON.stringify(gr.link))}, this)">Link kopiëren</button>
+        <button class="btn-detail" onclick="downloadGroupPDF('${gr.id}', this)">Rapport (PDF)</button>
+        <button class="btn-detail" onclick="toggleGroup('${gr.id}', ${!gr.active})">${gr.active ? 'Deactiveren' : 'Activeren'}</button>
+      </div>
+    </div>`;
+}
+
+function showGroupForm() {
+  const t = currentTenant || {};
+  const ctx = defaultContext(t.type);
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('group-form-wrap').innerHTML = `
+    <div class="card" style="max-width:720px;margin-bottom:18px">
+      <div class="card-title">Nieuwe groep voor ${esc(t.name||'')}</div>
+      <div class="form-grid">
+        <div class="form-field"><label class="form-label">Context</label>
+          <select class="form-input" id="grp-context" onchange="groupFormChanged()">
+            ${Object.entries(CONTEXT_LABELS).map(([v,l])=>`<option value="${v}" ${v===ctx?'selected':''}>${l}</option>`).join('')}
+          </select></div>
+        <div class="form-field"><label class="form-label">Naam van de groep</label>
+          <input class="form-input" id="grp-label" placeholder="Groep Utrecht maart"></div>
+        <div class="form-field"><label class="form-label">Startdatum <span class="gli-req">(verplicht bij GLI)</span></label>
+          <input class="form-input" id="grp-start" type="date" value="${today}" onchange="groupFormChanged()"></div>
+        <div class="form-field"><label class="form-label">Verwacht aantal deelnemers</label>
+          <input class="form-input" id="grp-verwacht" type="number" min="0" placeholder="12"></div>
+        <div class="form-field"><label class="form-label">Geldig tot</label>
+          <input class="form-input" id="grp-expires" type="date"></div>
+        <div class="form-field"><label class="form-label">Maximaal aantal gebruikers (optioneel)</label>
+          <input class="form-input" id="grp-max" type="number" min="1" placeholder="onbeperkt"></div>
+        <div class="form-field grp-gli"><label class="form-label">AGB-code coach (optioneel)</label>
+          <input class="form-input" id="grp-agb" inputmode="numeric" maxlength="8" placeholder="12345678"></div>
+        <div class="form-field grp-gli"><label class="form-label">Coachsignaal</label>
+          <label class="form-check"><input type="checkbox" id="grp-signaal"> Wekelijks groepssignaal aan (opt-in)</label></div>
+      </div>
+      <button class="btn-create" onclick="createGroup()">Groep aanmaken →</button>
+      <button class="btn-detail" onclick="document.getElementById('group-form-wrap').innerHTML=''" style="margin-left:8px">Annuleren</button>
+      <div id="grp-result"></div>
+    </div>`;
+  groupFormChanged();
+}
+
+function groupFormChanged() {
+  const ctx = document.getElementById('grp-context').value;
+  const start = document.getElementById('grp-start').value;
+  const today = new Date().toISOString().slice(0,10);
+  document.querySelectorAll('.grp-gli').forEach(el => el.hidden = ctx !== 'gli');
+  document.querySelector('.gli-req').hidden = ctx !== 'gli';
+  document.getElementById('grp-expires').value = ctx === 'gli' && start ? addMonthsISO(start, 24) : addMonthsISO(today, 12);
+}
+
+async function createGroup() {
+  const body = {
+    tenantSlug: currentTenant.slug,
+    context: document.getElementById('grp-context').value,
+    label: document.getElementById('grp-label').value.trim(),
+    start_date: document.getElementById('grp-start').value || null,
+    verwacht_aantal_deelnemers: document.getElementById('grp-verwacht').value,
+    expires_at: document.getElementById('grp-expires').value || null,
+    max_uses: document.getElementById('grp-max').value,
+    agb_code_coach: document.getElementById('grp-agb').value.trim(),
+    coach_signaal_aan: document.getElementById('grp-signaal').checked,
+  };
+  if (!body.label) { alert('Geef de groep een naam'); return; }
+  try {
+    const d = await apiSend('POST', '/api/dashboard/groups', body);
+    const link = d.group.link;
+    document.getElementById('grp-result').innerHTML = `
+      <div class="group-result">
+        <img src="${d.qr}" alt="QR-code" width="160" height="160">
+        <div style="flex:1;min-width:0">
+          <div class="form-label">Link voor ${esc(d.group.label)}</div>
+          <div class="links-box" style="max-height:none">${esc(link)}</div>
+          <button class="copy-btn" onclick="copyText(${esc(JSON.stringify(link))}, this)">📋 Kopieer link</button>
+          <a class="copy-btn" style="background:var(--plum);text-decoration:none;display:inline-block" href="${d.qr}" download="zetjes-qr-${esc(d.group.label).replace(/\s+/g,'-')}.png">⬇ QR-code</a>
+          ${d.instructie ? `
+            <div class="form-label" style="margin-top:6px">Instructie voor de coach</div>
+            <div class="links-box" style="font-family:inherit;max-height:none">${esc(d.instructie)}</div>
+            <button class="copy-btn" onclick="copyText(${esc(JSON.stringify(d.instructie))}, this)">📋 Kopieer instructie</button>` : ''}
+        </div>
+      </div>`;
+    const g = await api('/api/dashboard/groups?tenant='+encodeURIComponent(currentTenant.slug));
+    document.querySelector('.group-grid').innerHTML = (g.groups||[]).map(renderGroupCard).join('');
+  } catch(e) { alert('Fout: '+e.message); }
+}
+
+async function toggleGroup(id, active) {
+  try {
+    await apiSend('PATCH', '/api/dashboard/groups', { id, active });
+    loadTenantPanel(currentTenant.slug);
+  } catch(e) { alert('Fout: '+e.message); }
+}
+
+function copyText(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const old = btn.textContent; btn.textContent = 'Gekopieerd ✓'; setTimeout(() => btn.textContent = old, 1500);
+  });
+}
+
+async function downloadGroupPDF(id, btn) {
+  const old = btn.textContent; btn.disabled = true; btn.textContent = 'Maken...';
+  try {
+    const r = await fetch(`${API}/api/dashboard/group-report?id=${encodeURIComponent(id)}`, {headers:{'x-admin-key':ADMIN_KEY}});
+    if (!r.ok) throw new Error('Fout '+r.status);
+    const name = (r.headers.get('Content-Disposition')||'').match(/filename="([^"]+)"/)?.[1] || 'zetjes-groepsrapport.pdf';
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  } catch(e) { alert('Rapport maken mislukt: '+e.message); }
+  finally { btn.disabled = false; btn.textContent = old; }
 }
 
 async function downloadPDF() {
