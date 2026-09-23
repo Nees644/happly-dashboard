@@ -4,10 +4,18 @@
 // bestaat er geen rij en toont het rapport alleen de kop en een melding.
 
 import fs from 'fs';
+import path from 'path';
 import PDFDocument from 'pdfkit';
 import { supabase, cors, isAdmin, weekSinceStart, phaseFor, PHASE_LABELS } from '../_lib/common.js';
 
-const asset = (p) => fs.readFileSync(new URL(`../../assets/${p}`, import.meta.url));
+// Op Vercel is de werkmap de projectroot (assets/ gaat mee via includeFiles in vercel.json).
+function asset(p) {
+  const candidates = [path.join(process.cwd(), 'assets', p)];
+  if (typeof __dirname !== 'undefined') candidates.push(path.join(__dirname, '..', '..', 'assets', p));
+  const found = candidates.find((c) => fs.existsSync(c));
+  if (!found) throw new Error(`Bestand niet gevonden: assets/${p}`);
+  return fs.readFileSync(found);
+}
 const FONTS = {
   sans: asset('fonts/dm-sans-latin-400-normal.woff'),
   sansBold: asset('fonts/dm-sans-latin-600-normal.woff'),
