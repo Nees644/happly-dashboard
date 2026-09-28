@@ -46,9 +46,18 @@ export default async function handler(req, res) {
       .order('created_at', { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
 
-    // Alleen de view: nooit sessies direct lezen voor groepscijfers.
+    // Alleen de views: nooit sessies of profiles direct lezen voor groepscijfers.
     const { data: report } = await supabase.from('report_group').select('*').eq('tenant_id', tenant.id);
     const byInvite = Object.fromEntries((report || []).map((r) => [r.invite_id, r]));
+
+    const { data: profielReport } = await supabase.from('report_group_profile').select('*').eq('tenant_id', tenant.id);
+    const profielByInvite = Object.fromEntries((profielReport || []).map((r) => [r.invite_id, r]));
+
+    const inviteIds = (await supabase.from('invites').select('id').eq('tenant_id', tenant.id)).data?.map((i) => i.id) || [];
+    const { data: voortgangReport } = inviteIds.length
+      ? await supabase.from('report_group_profile_voortgang').select('*').in('invite_id', inviteIds)
+      : { data: [] };
+    const voortgangByInvite = Object.fromEntries((voortgangReport || []).map((r) => [r.invite_id, r]));
 
     const { count: losseLinks } = await supabase
       .from('invites').select('id', { count: 'exact', head: true })
@@ -58,6 +67,8 @@ export default async function handler(req, res) {
       const week = i.context === 'gli' ? weekSinceStart(i.start_date) : null;
       const phase = phaseFor(week);
       const r = byInvite[i.id];
+      const pr = profielByInvite[i.id];
+      const vr = voortgangByInvite[i.id];
       return {
         id: i.id,
         label: i.label,
@@ -84,6 +95,16 @@ export default async function handler(req, res) {
           blokkades: r.blokkades,
           momenten: r.momenten,
           poortwachter_redenen: r.poortwachter_redenen,
+        } : null,
+        groepsfoto: pr ? {
+          profielen: pr.profielen,
+          verdeling: pr.verdeling,
+          gemiddelde_score: pr.gemiddelde_score,
+          voortgang: vr ? {
+            deelnemers: vr.deelnemers_met_hermeting,
+            gemiddeld_verschil: vr.gemiddeld_verschil,
+            antwoorden: vr.voortgang_antwoorden,
+          } : null,
         } : null,
       };
     });
